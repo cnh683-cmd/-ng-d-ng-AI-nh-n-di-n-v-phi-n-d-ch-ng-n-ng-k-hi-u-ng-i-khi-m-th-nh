@@ -1,16 +1,17 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.core.database import get_db
-from app.models.feedback_model import Feedback
 from app.api.v1.dependencies import get_current_admin
-from app.models.user_model import User
 
 router = APIRouter(prefix="/admin/feedback", tags=["Admin - Feedback"])
 
 @router.get("")
-def get_all_feedbacks(
-    admin: User = Depends(get_current_admin),
-    db: Session = Depends(get_db)
+async def get_all_feedbacks(
+    admin: dict = Depends(get_current_admin),
+    db: AsyncIOMotorDatabase = Depends(get_db)
 ):
-    # Lấy toàn bộ phản hồi từ bảng feedbacks
-    return db.query(Feedback).all()
+    cursor = db["feedbacks"].find()
+    feedbacks = await cursor.to_list(length=1000)
+    for fb in feedbacks:
+        fb["id"] = str(fb.pop("_id"))
+    return feedbacks

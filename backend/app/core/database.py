@@ -1,24 +1,16 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from motor.motor_asyncio import AsyncIOMotorClient
 
-# Thay "localhost" bằng Server Name trong SSMS của bạn nếu cần
-SERVER = 'localhost' 
-DATABASE = 'SignLanguageDB'
+MONGO_URL = "mongodb://localhost:27017"
+DATABASE_NAME = "SignLanguageDB"
 
-# Chuỗi kết nối dùng Windows Authentication (Không cần tài khoản/mật khẩu)
-SQLALCHEMY_DATABASE_URL = f"mssql+pyodbc://@{SERVER}/{DATABASE}?driver=ODBC+Driver+17+for+SQL+Server&Trusted_Connection=yes"
+# Biến toàn cục lưu trữ connection
+client = None
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base = declarative_base()
-
-# Hàm tạo session để gọi trong các API
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db():
+    global client
+    # Chỉ khởi tạo kết nối khi FastAPI đã sẵn sàng, tránh lỗi Event Loop
+    if client is None:
+        client = AsyncIOMotorClient(MONGO_URL)
+    
+    db = client[DATABASE_NAME]
+    yield db

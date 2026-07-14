@@ -16,8 +16,7 @@ import Register from './pages/Register';
 // User pages
 import DashboardPage from './pages/user/DashboardPage';
 import CameraPage from './pages/user/CameraPage';
-import TextToSignPage from './pages/user/TextToSignPage';
-import TextToSpeechPage from './pages/user/TextToSpeechPage';
+import TranslationStationPage from './pages/user/TranslationStationPage';
 import HistoryPage from './pages/user/HistoryPage';
 import LearningPage from './pages/user/LearningPage';
 import ProfilePage from './pages/user/ProfilePage';
@@ -61,8 +60,7 @@ function App() {
       <Route path="/" element={<PrivateRoute><UserLayout><DashboardPage /></UserLayout></PrivateRoute>} />
       <Route path="/dashboard" element={<PrivateRoute><UserLayout><DashboardPage /></UserLayout></PrivateRoute>} />
       <Route path="/camera" element={<PrivateRoute><UserLayout><CameraPage /></UserLayout></PrivateRoute>} />
-      <Route path="/text-to-sign" element={<PrivateRoute><UserLayout><TextToSignPage /></UserLayout></PrivateRoute>} />
-      <Route path="/text-to-speech" element={<PrivateRoute><UserLayout><TextToSpeechPage /></UserLayout></PrivateRoute>} />
+      <Route path="/text-to-sign" element={<PrivateRoute><UserLayout><TranslationStationPage /></UserLayout></PrivateRoute>} />
       <Route path="/history" element={<PrivateRoute><UserLayout><HistoryPage /></UserLayout></PrivateRoute>} />
       <Route path="/learning" element={<PrivateRoute><UserLayout><LearningPage /></UserLayout></PrivateRoute>} />
       <Route path="/profile" element={<PrivateRoute><UserLayout><ProfilePage /></UserLayout></PrivateRoute>} />

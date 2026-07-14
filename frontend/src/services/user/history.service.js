@@ -1,21 +1,14 @@
 import apiClient from '../api.client';
 
-let mockHistory = [
-  { id: '1', userId: '2', inputType: 'text', inputContent: 'Xin chào', outputContent: 'video_xin_chao.mp4', timestamp: new Date().toISOString() },
-  { id: '2', userId: '2', inputType: 'sign', inputContent: 'cử chỉ A', outputContent: 'A', timestamp: new Date(Date.now() - 86400000).toISOString() },
-];
-
-export const getHistory = async (userId) => {
-  return new Promise((resolve) => {
-    const data = mockHistory.filter(item => item.userId === userId);
-    setTimeout(() => resolve(data), 300);
-  });
+// Gọi API lấy danh sách lịch sử của người dùng đang đăng nhập
+export const getHistory = async () => {
+  // Không cần truyền userId vì Backend tự động lấy qua Token
+  const response = await apiClient.get('/history');
+  return response.data;
 };
 
+// Gọi API lưu lịch sử mới (Trỏ tới endpoint đã định nghĩa trong translate.py)
 export const addHistory = async (historyItem) => {
-  return new Promise((resolve) => {
-    const newItem = { ...historyItem, id: Date.now().toString() };
-    mockHistory.push(newItem);
-    resolve(newItem);
-  });
+  const response = await apiClient.post('/save-history', historyItem);
+  return response.data;
 };

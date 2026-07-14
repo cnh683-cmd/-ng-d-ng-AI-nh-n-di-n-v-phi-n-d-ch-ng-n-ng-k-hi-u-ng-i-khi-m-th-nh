@@ -3,6 +3,10 @@ import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 
 const HistoryCard = ({ item }) => {
+  // BÁO CHO JAVASCRIPT BIẾT ĐÂY LÀ GIỜ UTC (THÊM 'Z') ĐỂ NÓ TỰ CỘNG 7 TIẾNG
+  const dateString = item.timestamp.endsWith('Z') ? item.timestamp : `${item.timestamp}Z`;
+  const dateObj = new Date(dateString);
+
   return (
     <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition">
       <div className="flex justify-between items-start">
@@ -18,11 +22,12 @@ const HistoryCard = ({ item }) => {
           </p>
         </div>
         <span className="text-xs text-gray-400">
-          {format(new Date(item.timestamp), 'dd/MM/yyyy HH:mm', { locale: vi })}
+          {/* Định dạng lại ngày giờ đã được cộng múi giờ */}
+          {format(dateObj, 'dd/MM/yyyy HH:mm', { locale: vi })}
         </span>
       </div>
     </div>
   );
 };
 
-export default HistoryCard; 
+export default HistoryCard;

@@ -1,64 +1,67 @@
 import apiClient from './api.client';
 
-// Mock users (giả lập)
-const MOCK_USERS = [
-  { id: '1', email: 'admin@example.com', password: 'admin123', fullName: 'Admin User', role: 'admin', isActive: true },
-  { id: '2', email: 'user@example.com', password: 'user123', fullName: 'Normal User', role: 'user', isActive: true },
-];
-
 export const login = async (email, password) => {
-  // Giả lập gọi API
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const user = MOCK_USERS.find(u => u.email === email && u.password === password);
-      if (user) {
-        // Trả về token giả và thông tin user
-        const token = 'mock-jwt-token-' + user.id;
-        localStorage.setItem('access_token', token);
-        resolve({ token, user: { ...user, password: undefined } });
-      } else {
-        reject(new Error('Email hoặc mật khẩu không đúng'));
+  try {
+    // Backend FastAPI (OAuth2PasswordRequestForm) yêu cầu gửi data dưới dạng Form URL Encoded
+    const params = new URLSearchParams();
+    params.append('username', email);
+    params.append('password', password);
+
+    // Gọi API thật xuống Backend
+    const response = await apiClient.post('/auth/login', params, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
       }
-    }, 500);
-  });
+    });
+
+    const token = response.data.access_token;
+    localStorage.setItem('access_token', token);
+
+    // Sau khi có token, gọi thêm API lấy thông tin Profile của User đó
+    const userResponse = await apiClient.get('/profile/me', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    return { token, user: userResponse.data };
+  } catch (error) {
+    // Bắt lỗi từ Backend trả về (nếu sai email/pass)
+    const errorMsg = error.response?.data?.detail || 'Đăng nhập thất bại. Vui lòng thử lại.';
+    throw new Error(errorMsg);
+  }
 };
 
 export const register = async (email, password, fullName) => {
-  // Giả lập đăng ký
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const exists = MOCK_USERS.find(u => u.email === email);
-      if (exists) {
-        reject(new Error('Email đã được sử dụng'));
-      } else {
-        const newUser = {
-          id: Date.now().toString(),
-          email,
-          password,
-          fullName,
-          role: 'user',
-          isActive: true,
-        };
-        MOCK_USERS.push(newUser);
-        resolve({ message: 'Đăng ký thành công', user: { ...newUser, password: undefined } });
-      }
-    }, 500);
-  });
+  try {
+    // Gọi API đăng ký thật xuống Backend
+    const response = await apiClient.post('/auth/register', {
+      email: email,
+      password: password,
+      full_name: fullName
+    });
+    return response.data;
+  } catch (error) {
+    const errorMsg = error.response?.data?.detail || 'Đăng ký thất bại. Email có thể đã tồn tại.';
+    throw new Error(errorMsg);
+  }
 };
 
 export const logout = () => {
   localStorage.removeItem('access_token');
 };
 
-export const getCurrentUser = () => {
-  // Giả lập lấy user từ token (thực tế decode token)
+export const getCurrentUser = async () => {
   const token = localStorage.getItem('access_token');
   if (!token) return null;
-  // Giả sử token là mock-jwt-token-1 hoặc 2
-  const userId = token.split('-')[3];
-  const user = MOCK_USERS.find(u => u.id === userId);
-  if (user) {
-    return { ...user, password: undefined };
+
+  try {
+    // Lấy thông tin user thật từ SQL Server thông qua API
+    const response = await apiClient.get('/profile/me');
+    return response.data;
+  } catch (error) {
+    // Nếu token hết hạn hoặc lỗi, tự động xóa đi
+    localStorage.removeItem('access_token');
+    return null;
   }
-  return null;
 };

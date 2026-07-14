@@ -1,43 +1,39 @@
-from sqlalchemy.orm import Session
-from app.models.dictionary_model import Dictionary, DictionaryCreate
+from motor.motor_asyncio import AsyncIOMotorDatabase
+from bson import ObjectId
+from app.models.dictionary_model import DictionaryCreate
 from fastapi import HTTPException
 
-def add_dictionary_item(db: Session, item: DictionaryCreate):
-    # Kiểm tra xem từ đã tồn tại chưa
-    existing = db.query(Dictionary).filter(Dictionary.word == item.word).first()
+async def add_dictionary_item(db: AsyncIOMotorDatabase, item: DictionaryCreate):
+    existing = await db["dictionary"].find_one({"word": item.word})
     if existing:
         raise HTTPException(status_code=400, detail="Word already exists")
     
-    # Tạo object mới
-    new_item = Dictionary(**item.dict())
-    db.add(new_item)
-    db.commit()
-    db.refresh(new_item)
+    new_item = item.model_dump() # Chuyển pydantic model sang json
+    result = await db["dictionary"].insert_one(new_item)
+    new_item["id"] = str(result.inserted_id)
     return new_item
 
-def update_dictionary_item(db: Session, item_id: int, item_update: dict):
-    # Tìm mục cần cập nhật
-    item = db.query(Dictionary).filter(Dictionary.id == item_id).first()
-    if not item:
+async def update_dictionary_item(db: AsyncIOMotorDatabase, item_id: str, item_update: dict):
+    result = await db["dictionary"].update_one(
+        {"_id": ObjectId(item_id)}, 
+        {"$set": item_update}
+    )
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Item not found")
     
-    # Cập nhật các trường dữ liệu
-    for key, value in item_update.items():
-        setattr(item, key, value)
-        
-    db.commit()
-    db.refresh(item)
-    return item
+    updated_item = await db["dictionary"].find_one({"_id": ObjectId(item_id)})
+    updated_item["id"] = str(updated_item.pop("_id"))
+    return updated_item
 
-def delete_dictionary_item(db: Session, item_id: int):
-    item = db.query(Dictionary).filter(Dictionary.id == item_id).first()
-    if not item:
+async def delete_dictionary_item(db: AsyncIOMotorDatabase, item_id: str):
+    result = await db["dictionary"].delete_one({"_id": ObjectId(item_id)})
+    if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Item not found")
-    
-    db.delete(item)
-    db.commit()
     return {"message": "Item deleted"}
 
-def get_dictionary(db: Session, skip: int = 0, limit: int = 100):
-    # Truy vấn danh sách từ điển
-    return db.query(Dictionary).offset(skip).limit(limit).all()
+async def get_dictionary(db: AsyncIOMotorDatabase, skip: int = 0, limit: int = 100):
+    cursor = db["dictionary"].find().skip(skip).limit(limit)
+    items = await cursor.to_list(length=limit)
+    for item in items:
+        item["id"] = str(item.pop("_id"))
+    return items

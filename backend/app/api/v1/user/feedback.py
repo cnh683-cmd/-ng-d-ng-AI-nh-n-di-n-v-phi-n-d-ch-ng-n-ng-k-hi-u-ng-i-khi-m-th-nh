@@ -1,29 +1,28 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.core.database import get_db
-from app.models.feedback_model import Feedback, FeedbackCreate
 from app.api.v1.dependencies import get_current_user
-from app.models.user_model import User
+from datetime import datetime
 
 router = APIRouter(prefix="/feedback", tags=["Feedback"])
 
 @router.post("")
-# Bỏ async, thêm db: Session để tương tác với SQL
-def send_feedback(
+# Đổi thành async, đổi db sang AsyncIOMotorDatabase của MongoDB
+async def send_feedback(
     content: str, 
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    current_user: dict = Depends(get_current_user), # current_user giờ là dict
+    db: AsyncIOMotorDatabase = Depends(get_db)
 ):
-    # Tạo object Feedback mới
-    new_feedback = Feedback(
-        user_id=current_user.id, # ID dạng số nguyên
-        content=content,
-        status="pending"
-    )
+    # Tạo object Dictionary (JSON) cho MongoDB
+    new_feedback = {
+        "user_id": current_user["id"], # Lấy ID của user hiện tại dạng chuỗi
+        "content": content,
+        "status": "pending",
+        "created_at": datetime.utcnow()
+    }
     
-    # Lưu vào database
-    db.add(new_feedback)
-    db.commit()
-    db.refresh(new_feedback)
+    # Lưu vào database MongoDB
+    result = await db["feedbacks"].insert_one(new_feedback)
     
-    return {"id": new_feedback.id, "message": "Feedback sent"}
+    # Lấy ID vừa được tự động sinh ra
+    return {"id": str(result.inserted_id), "message": "Feedback sent"}

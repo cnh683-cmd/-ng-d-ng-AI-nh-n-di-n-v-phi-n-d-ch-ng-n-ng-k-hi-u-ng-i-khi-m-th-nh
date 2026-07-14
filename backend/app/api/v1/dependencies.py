@@ -1,19 +1,19 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
-from sqlalchemy.orm import Session
+from motor.motor_asyncio import AsyncIOMotorDatabase
+from bson import ObjectId
 from app.core.config import settings
 
-# Import công cụ kết nối và Model SQL Server
+# Import Database của MongoDB
 from app.core.database import get_db
-from app.models.user_model import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
-# Xóa từ khóa 'async' đi vì chúng ta dùng đồng bộ cho SQL, thêm tham số db: Session
-def get_current_user(
+# Thêm 'async' và đổi kiểu của db sang AsyncIOMotorDatabase
+async def get_current_user(
     token: str = Depends(oauth2_scheme), 
-    db: Session = Depends(get_db)
+    db: AsyncIOMotorDatabase = Depends(get_db)
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -26,23 +26,27 @@ def get_current_user(
         if user_id_str is None:
             raise credentials_exception
             
-        # SQL Server dùng số nguyên (int) cho ID, nên phải ép kiểu chuỗi thành số
-        user_id = int(user_id_str)
+        # Kiểm tra ID có chuẩn định dạng ObjectId của MongoDB không
+        if not ObjectId.is_valid(user_id_str):
+            raise credentials_exception
         
-    except (JWTError, ValueError): # Thêm ValueError để phòng trường hợp ép kiểu int bị lỗi
+    except JWTError:
         raise credentials_exception
     
-    # Truy vấn bằng SQLAlchemy thay vì MongoDB
-    user = db.query(User).filter(User.id == user_id).first()
+    # Truy vấn bằng MongoDB
+    user = await db["users"].find_one({"_id": ObjectId(user_id_str)})
     
     if user is None:
         raise credentials_exception
-    if not user.is_active:
+    if not user.get("is_active"):
         raise HTTPException(status_code=403, detail="Account is disabled")
         
-    return user # Trả thẳng object User của SQL
+    # Gắn thêm key 'id' để tương thích với các file khác
+    user["id"] = str(user["_id"])
+    return user # Trả về dictionary (JSON)
 
-def get_current_admin(current_user: User = Depends(get_current_user)):
-    if current_user.role != "admin":
+# Đổi kiểu dữ liệu của current_user thành dict
+async def get_current_admin(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin privileges required")
     return current_user

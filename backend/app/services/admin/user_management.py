@@ -1,31 +1,24 @@
-from sqlalchemy.orm import Session
-from app.models.user_model import User
-from fastapi import HTTPException, status
+from motor.motor_asyncio import AsyncIOMotorDatabase
+from bson import ObjectId
+from fastapi import HTTPException
 
-def get_all_users(db: Session, skip: int = 0, limit: int = 100):
-    # Truy vấn lấy toàn bộ user từ bảng users trong SQL Server
-    users = db.query(User).offset(skip).limit(limit).all()
+async def get_all_users(db: AsyncIOMotorDatabase, skip: int = 0, limit: int = 100):
+    cursor = db["users"].find().skip(skip).limit(limit)
+    users = await cursor.to_list(length=limit)
+    for user in users:
+        user["id"] = str(user.pop("_id"))
     return users
 
-def toggle_user_active(db: Session, user_id: int):
-    # Tìm user theo ID (số nguyên)
-    user = db.query(User).filter(User.id == user_id).first()
+async def toggle_user_active(db: AsyncIOMotorDatabase, user_id: str):
+    user = await db["users"].find_one({"_id": ObjectId(user_id)})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
-    # Đảo ngược trạng thái hoạt động
-    user.is_active = not user.is_active
-    db.commit()
-    db.refresh(user)
-    
-    return {"user_id": user_id, "is_active": user.is_active}
+    new_status = not user.get("is_active", True)
+    await db["users"].update_one({"_id": ObjectId(user_id)}, {"$set": {"is_active": new_status}})
+    return {"user_id": user_id, "is_active": new_status}
 
-def delete_user(db: Session, user_id: int):
-    # Tìm và xóa user
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
+async def delete_user(db: AsyncIOMotorDatabase, user_id: str):
+    result = await db["users"].delete_one({"_id": ObjectId(user_id)})
+    if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="User not found")
-    
-    db.delete(user)
-    db.commit()
     return {"message": "User deleted"}
