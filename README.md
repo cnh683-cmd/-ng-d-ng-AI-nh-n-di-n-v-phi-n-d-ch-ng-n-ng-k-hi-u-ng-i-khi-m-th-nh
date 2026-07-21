@@ -1,4 +1,4 @@
-                                                                               SignBridge System
+                                          SignBridge System
 Đây là sản phẩm hệ thống phiên dịch ngôn ngữ ký hiệu hỗ trợ người khiếm thính và khiếm thị. Hệ thống quản lý toàn diện các hoạt động nhận diện, dịch thuật ngôn ngữ ký hiệu thông qua mô hình AI, đồng thời cung cấp nền tảng quản trị (Admin Panel) mạnh mẽ. Hệ thống cung cấp các tính năng quản lý người dùng, quản lý từ điển ký hiệu, theo dõi lịch sử phiên dịch và quản lý các phiên bản AI Model. Hệ thống có thể hoạt động độc lập như một nền tảng hỗ trợ giao tiếp hoặc tích hợp vào các hệ thống y tế/giáo dục chuyên biệt.
 
 Table of Contents
