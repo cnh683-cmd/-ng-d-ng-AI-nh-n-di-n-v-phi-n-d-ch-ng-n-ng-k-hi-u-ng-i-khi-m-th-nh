@@ -20,7 +20,7 @@ Hướng dẫn build
 Dưới đây là cấu trúc thư mục tổng thể của toàn bộ dự án:
 
 ```text
-/UNG-DUNG-AI-NHAN-DIEN...        # Thư mục gốc của dự án
+/SignBridge:Dành cho người khiếm thính        # Thư mục gốc của dự án
 ├── .venv/                       # Môi trường ảo Python (chứa các thư viện backend)
 ├── .venv-1/                     # Môi trường ảo Python dự phòng 1
 ├── .venv-2/                     # Môi trường ảo Python dự phòng 2
