@@ -15,8 +15,8 @@ const Header = () => {
   return (
     <header className="bg-white shadow-md py-3 px-6 flex justify-between items-center">
       <div className="flex items-center space-x-2">
-        <Link to="/" className="text-2xl font-bold text-primary-600">SignLang</Link>
-        <span className="text-sm text-gray-500">Phiên dịch ngôn ngữ ký hiệu</span>
+        <Link to="/" className="text-2xl font-bold text-primary-600">SignBridge</Link>
+        <span className="text-sm text-gray-500">Phiên dịch ngôn ngữ ký hiệu cho người khiếm thị</span>
       </div>
       <div className="flex items-center space-x-4">
         {user ? (

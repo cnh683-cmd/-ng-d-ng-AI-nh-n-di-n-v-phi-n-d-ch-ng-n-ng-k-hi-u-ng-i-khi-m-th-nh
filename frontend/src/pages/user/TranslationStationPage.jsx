@@ -86,26 +86,6 @@ const TranslationStationPage = () => {
         return;
     }
 
-    // --- LOGIC TỰ ĐỘNG LƯU LỊCH SỬ ---
-    try {
-        const token = localStorage.getItem('access_token');
-        fetch('http://127.0.0.1:8000/api/v1/translate/save-history', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': token ? `Bearer ${token}` : '' 
-            },
-            body: JSON.stringify({
-                input_type: "text_to_sign",
-                input_content: textInput.trim(),         // Văn bản người dùng nhập
-                output_content: "Đã dịch sang ký hiệu"   // Kết quả trả ra
-            })
-        }).catch(err => console.error("Lỗi gọi API lưu lịch sử:", err));
-    } catch (error) {
-        console.error("Lỗi lưu lịch sử:", error);
-    }
-    // ---------------------------------
-
     playIntervalRef.current = setInterval(() => {
       if (index < letters.length) {
         const char = letters[index];
@@ -119,6 +99,39 @@ const TranslationStationPage = () => {
         setTimeout(() => setIsFinished(true), 500); 
       }
     }, 1200); 
+  };
+
+  // LƯU LỊCH SỬ THỦ CÔNG - Đã sửa lỗi 307 và 405
+  const handleSaveHistory = async () => {
+    if (!textInput.trim()) return;
+    try {
+const token = localStorage.getItem('access_token');
+      const cleanLetters = processedLetters.filter(char => char.trim() !== '');
+
+      // Gọi API trực tiếp không có dấu "/" ở cuối
+      const response = await fetch('http://127.0.0.1:8000/api/v1/history', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '' 
+        },
+        body: JSON.stringify({
+          input_type: "text_to_sign",
+          input_content: textInput.trim(),
+          output_content: cleanLetters 
+        })
+      });
+
+      if (response.ok) {
+        alert("🎉 Đã lưu kết quả dịch vào lịch sử thành công!");
+      } else {
+        const errData = await response.json();
+        alert(`❌ Lỗi lưu lịch sử: ${errData.detail || 'Thử lại sau'}`);
+      }
+    } catch (error) {
+      console.error("Lỗi kết nối API:", error);
+      alert("❌ Lỗi kết nối đến Server.");
+    }
   };
 
   return (
@@ -190,27 +203,37 @@ const TranslationStationPage = () => {
                 </div>
             
             ) : isFinished ? (
-                <div className="w-full h-full flex items-center p-6 overflow-x-auto overflow-y-hidden whitespace-nowrap gap-4 pb-20">
-                    {/* TRẠNG THÁI 2: ĐÃ ĐỌC XONG -> HIỂN THỊ HÀNG NGANG */}
-                    {processedLetters.map((char, index) => (
-                        char === ' ' ? (
-                            <div key={index} className="w-10 flex-shrink-0"></div> 
-                        ) : (
-                            <div key={index} className="flex flex-col items-center flex-shrink-0 animate-fade-in">
-                                <img 
-                                    src={`/signs/${char.toUpperCase()}.jpg`} 
-                                    alt={`Ký hiệu ${char}`}
-                                    className="h-28 w-28 object-cover rounded-xl shadow-sm border-2 border-white mb-3"
-                                    onError={(e) => {
-                                        e.target.style.display = 'none';
-                                        e.target.nextSibling.style.display = 'block';
-                                    }}
-                                />
-                                <div className="text-5xl font-black text-blue-600 hidden lowercase mb-3">{char}</div>
-                                <span className="text-xl font-bold text-gray-700 bg-gray-200 px-4 py-1 rounded-full lowercase">{char}</span>
-                            </div>
-                        )
-                    ))}
+                <div className="w-full h-full flex flex-col items-center justify-center p-6">
+                    {/* TRẠNG THÁI 2: ĐÃ HIỂN THỊ HÀNG NGANG */}
+                    <div className="w-full flex items-center overflow-x-auto overflow-y-hidden whitespace-nowrap gap-4 pb-10">
+                        {processedLetters.map((char, index) => (
+                            char === ' ' ? (
+                                <div key={index} className="w-10 flex-shrink-0"></div> 
+                            ) : (
+                                <div key={index} className="flex flex-col items-center flex-shrink-0 animate-fade-in">
+                                    <img 
+                                        src={`/signs/${char.toUpperCase()}.jpg`} 
+                                        alt={`Ký hiệu ${char}`}
+                                        className="h-28 w-28 object-cover rounded-xl shadow-sm border-2 border-white mb-3"
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                            e.target.nextSibling.style.display = 'block';
+                                        }}
+                                    />
+                                    <div className="text-5xl font-black text-blue-600 hidden lowercase mb-3">{char}</div>
+                                    <span className="text-xl font-bold text-gray-700 bg-gray-200 px-4 py-1 rounded-full lowercase">{char}</span>
+                                </div>
+                            )
+                        ))}
+                    </div>
+
+                    {/* NÚT BẤM LƯU THỦ CÔNG */}
+                    <button 
+                        onClick={handleSaveHistory}
+                        className="mt-4 px-8 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-full shadow-lg transition-all flex items-center gap-2 transform hover:-translate-y-0.5"
+                    >
+                        💾 Lưu kết quả vào lịch sử
+                    </button>
                 </div>
             
             ) : (

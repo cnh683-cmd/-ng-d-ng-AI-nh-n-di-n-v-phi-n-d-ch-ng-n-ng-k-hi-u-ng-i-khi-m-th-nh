@@ -1,18 +1,19 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from datetime import datetime
+from typing import List
 
-class HistoryBase(BaseModel):
-    user_id: str  # Đổi sang string
-    input_type: str  
+class HistoryCreate(BaseModel):
+    input_type: str = "text_to_sign"
     input_content: str
-    output_content: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    output_content: List[str]  # Mảng lưu danh sách ký tự
 
-class HistoryCreate(HistoryBase):
-    pass
-
-class HistoryResponse(HistoryBase):
-    id: str # Đổi sang string
+class HistoryResponse(BaseModel):
+    id: str
+    user_id: str
+    input_type: str
+    input_content: str
+    output_content: List[str]
+    timestamp: datetime
 
     class Config:
         from_attributes = True

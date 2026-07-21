@@ -26,20 +26,26 @@ const CameraPage = () => {
                 'Authorization': token ? `Bearer ${token}` : '' 
             },
             body: JSON.stringify({
-                input_type: "camera",
+                input_type: "camera", 
                 input_content: "Quét từ Camera", 
-                output_content: word.trim()      
+                output_content: [word.trim()] // ✅ THÊM NGOẶC VUÔNG Ở ĐÂY ĐỂ TRỞ THÀNH MẢNG (LIST)
             })
         });
 
         if (response.ok) {
             alert("✅ Đã lưu vào lịch sử thành công!");
         } else {
-            alert("❌ Lỗi khi lưu lịch sử từ server!");
+            // 🚨 ĐOẠN NÀY ĐƯỢC NÂNG CẤP ĐỂ ĐỌC LỖI TỪ BACKEND
+            const errorData = await response.json();
+            console.error("Chi tiết lỗi từ Backend:", errorData);
+            
+            // Hiện thẳng lý do lỗi lên màn hình để dễ fix
+            const errorMessage = errorData.detail || JSON.stringify(errorData);
+            alert("❌ Server từ chối lưu với lý do:\n" + errorMessage);
         }
     } catch (error) {
         console.error("Lỗi khi lưu:", error);
-        alert("❌ Lỗi kết nối khi lưu lịch sử!");
+        alert("❌ Lỗi kết nối tới server (Server có thể chưa chạy)!");
     }
   };
 
@@ -48,7 +54,7 @@ const CameraPage = () => {
     ctx.clearRect(0, 0, width, height);
     if (!landmarks || landmarks.length === 0) return;
 
-    // 1. VẼ GÂN TAY (GIỮ NGUYÊN BẢN SẮC)
+    // 1. VẼ GÂN TAY
     const connections = [
       [0,1], [1,2], [2,3], [3,4], [0,5], [5,6], [6,7], [7,8],
       [5,9], [9,10], [10,11], [11,12], [9,13], [13,14], [14,15], 
@@ -86,7 +92,7 @@ const CameraPage = () => {
     const boxW = (maxX - minX) * width + padding * 2;
     const boxH = (maxY - minY) * height + padding * 2;
 
-    // Vẽ viền chữ nhật màu xanh lơ giống ảnh
+    // Vẽ viền chữ nhật màu xanh lơ
     ctx.strokeStyle = '#00FFFF'; 
     ctx.lineWidth = 3;
     ctx.strokeRect(boxX, boxY, boxW, boxH);
@@ -101,7 +107,7 @@ const CameraPage = () => {
       ctx.fillStyle = '#00FFFF';
       ctx.fillRect(boxX, boxY - 30, textWidth + 10, 30);
       
-      // Vẽ text (dùng ctx.scale(-1, 1) để lật trục X, giúp chữ không bị ngược kính)
+      // Vẽ text (lật ngược trục X để không bị chữ ngược kính)
       ctx.save();
       ctx.scale(-1, 1);
       ctx.fillStyle = '#000000';
@@ -154,7 +160,7 @@ const CameraPage = () => {
               const data = await response.json();
               if (isMounted) {
                   const detectedLetter = data.text || "";
-                  const confidence = data.confidence || 0; // Hứng độ tin cậy từ Backend
+                  const confidence = data.confidence || 0;
                   
                   setCurrentLetter(detectedLetter);
                   
@@ -173,7 +179,6 @@ const CameraPage = () => {
                   displayCanvasRef.current.width = videoRef.current.videoWidth;
                   displayCanvasRef.current.height = videoRef.current.videoHeight;
                   
-                  // Gọi hàm vẽ, TRUYỀN THÊM letter VÀ confidence
                   drawSkeleton(
                       displayCtx, 
                       data.landmarks, 

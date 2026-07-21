@@ -19,7 +19,7 @@ class LandmarkRequest(BaseModel):
 class SaveHistoryRequest(BaseModel):
     input_type: str
     input_content: str
-    output_content: str
+    output_content: list  # ✅ ĐÃ SỬA Ở ĐÂY: Đổi 'str' thành 'list' để khớp với Database
 
 @router.post("/sign-to-text-image")
 async def translate_sign_to_text_image(request: ImageRequest, db: AsyncIOMotorDatabase = Depends(get_db)):
@@ -42,17 +42,20 @@ async def translate_text_to_speech(text: str, current_user: dict = Depends(get_c
 @router.post("/save-history")
 async def save_history_record(
     req: SaveHistoryRequest, 
-    current_user: dict = Depends(get_current_user), # Đã bật lại bảo mật
+    current_user: dict = Depends(get_current_user), 
     db: AsyncIOMotorDatabase = Depends(get_db)
 ):
     try:
         new_history = HistoryCreate(
-            user_id=current_user["id"], # Trích xuất ID thật của người đang đăng nhập
+            user_id=current_user["id"], 
             input_type=req.input_type,
             input_content=req.input_content,
             output_content=req.output_content
         )
-        await create_history(db, new_history) # Thêm await
+        
+        # 🚨 ĐÂY LÀ DÒNG DUY NHẤT CẦN SỬA: Thêm current_user["id"] vào làm tham số thứ 2
+        await create_history(db, current_user["id"], new_history) 
+        
         return {"status": "success", "message": "Đã lưu lịch sử thành công"}
     except Exception as e:
         print(f"Lỗi hệ thống khi lưu: {e}") 

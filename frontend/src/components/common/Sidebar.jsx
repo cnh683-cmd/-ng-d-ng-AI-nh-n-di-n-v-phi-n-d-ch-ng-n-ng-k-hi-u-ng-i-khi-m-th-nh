@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { FaUsers, FaBook, FaChartBar, FaCog, FaDatabase } from 'react-icons/fa';
+import { FaUsers, FaBook, FaChartBar, FaCog } from 'react-icons/fa';
 
 const Sidebar = () => {
   const linkClasses = ({ isActive }) =>
@@ -23,10 +23,6 @@ const Sidebar = () => {
         <NavLink to="/admin/dictionary" className={linkClasses}>
           <FaBook />
           <span>Quản lý từ điển</span>
-        </NavLink>
-        <NavLink to="/admin/models" className={linkClasses}>
-          <FaDatabase />
-          <span>Quản lý mô hình AI</span>
         </NavLink>
         <NavLink to="/admin/feedback" className={linkClasses}>
           <FaCog />

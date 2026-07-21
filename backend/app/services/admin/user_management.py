@@ -22,3 +22,21 @@ async def delete_user(db: AsyncIOMotorDatabase, user_id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User deleted"}
+
+# --- THÊM HÀM NÀY VÀO CUỐI FILE ---
+async def update_user_info(db: AsyncIOMotorDatabase, user_id: str, update_data: dict):
+    # Chỉ cho phép cập nhật các trường an toàn (ví dụ: full_name)
+    allowed_data = {k: v for k, v in update_data.items() if k in ["full_name"]}
+    
+    if not allowed_data:
+        return {"message": "Không có dữ liệu hợp lệ để cập nhật"}
+        
+    result = await db["users"].update_one(
+        {"_id": ObjectId(user_id)}, 
+        {"$set": allowed_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    return {"message": "Cập nhật thành công", "updated_data": allowed_data}

@@ -11,16 +11,16 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex space-x-8">
             <NavLink to="/dashboard" className={linkClasses}>Trang chủ</NavLink>
-            <NavLink to="/camera" className={linkClasses}>Camera</NavLink>
+            <NavLink to="/camera" className={linkClasses}>📷 Nhận diện</NavLink>
             
             {/* Đã gộp 2 nút cũ thành 1 nút duy nhất ở đây */}
-            <NavLink to="/text-to-sign" className={linkClasses}>Văn bản - Ký hiệu</NavLink>
+            <NavLink to="/text-to-sign" className={linkClasses}>🤟 Dịch ký hiệu</NavLink>
             
-            <NavLink to="/history" className={linkClasses}>Lịch sử</NavLink>
-            <NavLink to="/learning" className={linkClasses}>Học ký hiệu</NavLink>
+            <NavLink to="/history" className={linkClasses}>📜 Lịch sử</NavLink>
+            <NavLink to="/learning" className={linkClasses}>📖 Học ký hiệu</NavLink>
           </div>
           <div className="flex items-center">
-            <NavLink to="/profile" className={linkClasses}>Hồ sơ</NavLink>
+            <NavLink to="/profile" className={linkClasses}>👤 Tài khoản</NavLink>
           </div>
         </div>
       </div>

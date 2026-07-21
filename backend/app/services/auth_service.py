@@ -1,10 +1,10 @@
+from typing import Any  # Dùng Any thay thế cho AsyncIOMotorDatabase để dọn sạch lỗi Pylance
 from app.models.user_model import UserCreate
 from app.core.security import hash_password, verify_password
 from fastapi import HTTPException
 from datetime import datetime
-from motor.motor_asyncio import AsyncIOMotorDatabase
 
-async def register_user(db: AsyncIOMotorDatabase, user_data: UserCreate):
+async def register_user(db: Any, user_data: UserCreate):
     # Tìm user trong collection "users"
     existing = await db["users"].find_one({"email": user_data.email})
     if existing:
@@ -27,7 +27,7 @@ async def register_user(db: AsyncIOMotorDatabase, user_data: UserCreate):
     new_user["id"] = str(result.inserted_id)
     return new_user
 
-async def authenticate_user(db: AsyncIOMotorDatabase, email: str, password: str):
+async def authenticate_user(db: Any, email: str, password: str):
     user = await db["users"].find_one({"email": email})
     if not user or not verify_password(password, user["hashed_password"]):
         raise HTTPException(status_code=401, detail="Incorrect email or password")

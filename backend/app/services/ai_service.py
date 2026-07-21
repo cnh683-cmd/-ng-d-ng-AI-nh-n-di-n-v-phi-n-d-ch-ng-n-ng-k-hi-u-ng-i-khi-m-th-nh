@@ -6,25 +6,25 @@ import base64
 import mediapipe as mp
 from sqlalchemy.orm import Session
 
-# Tìm đường dẫn đến file Model
-current_dir = os.path.dirname(os.path.abspath(__file__))
-backend_dir = os.path.dirname(os.path.dirname(current_dir))
-model_path = os.path.join(backend_dir, 'models', 'asl_model.pkl')
+# --- ĐƯỜNG DẪN TÌM FILE MODEL ---
+current_dir = os.path.dirname(os.path.abspath(__file__)) 
+app_dir = os.path.dirname(current_dir)                   
+model_path = os.path.join(app_dir, 'models', 'asl_model.pkl') 
 
 model = None
 if os.path.exists(model_path):
     with open(model_path, 'rb') as f:
         model = pickle.load(f)
-    print(f"✅ Đã load thành công AI Model (.pkl)")
+    print("✅ Da load thanh cong AI Model (.pkl)")
 else:
-    print(f"⚠️ Không tìm thấy file tại: {model_path}")
+    print(f"❌ Khong tim thay file tai: {model_path}")
+    print("👉 VUI LÒNG COPY FILE 'asl_model.pkl' VÀO THƯ MỤC 'backend/app/models/'")
 
-# Khởi tạo MediaPipe trên Backend
+# Khởi tạo MediaPipe
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(static_image_mode=True, max_num_hands=1, min_detection_confidence=0.5)
 
 async def sign_to_text_from_image(base64_str: str):
-    # CHÚ Ý: Đã thêm tham số thứ 3 (độ tin cậy) là 0.0 vào các giá trị return khi có lỗi
     if model is None: return "Model chưa sẵn sàng", [], 0.0
     
     try:
@@ -41,6 +41,8 @@ async def sign_to_text_from_image(base64_str: str):
         if result.multi_hand_landmarks:
             hand_landmarks = result.multi_hand_landmarks[0]
             landmarks_data = []
+            
+            # Đưa về gốc tọa độ cổ tay
             base_x = hand_landmarks.landmark[0].x
             base_y = hand_landmarks.landmark[0].y
             
@@ -49,26 +51,24 @@ async def sign_to_text_from_image(base64_str: str):
             
             features = np.array(landmarks_data).reshape(1, -1)
             
-            # 1. Dự đoán ra chữ cái (VD: "A")
+            # 1. Dự đoán
             prediction = model.predict(features)
             
-            # 2. TÍNH TOÁN ĐỘ TIN CẬY (CONFIDENCE)
+            # 2. Tính độ tin cậy
             confidence = 0.0
             try:
-                # Lấy mảng xác suất của tất cả các lớp
                 probabilities = model.predict_proba(features)
-                # Nhặt ra con số cao nhất
                 max_prob = np.max(probabilities)
-                # Nhân 100 và làm tròn 2 chữ số (VD: 0.8912 -> 89.12)
                 confidence = round(max_prob * 100, 2)
             except AttributeError:
-                # Đề phòng model của bạn dùng thuật toán không hỗ trợ predict_proba
                 confidence = 100.0
             
             draw_points = [{"x": lm.x, "y": lm.y} for lm in hand_landmarks.landmark]
             
-            # TRẢ VỀ 3 BIẾN: Chữ cái, Tọa độ, và Độ tin cậy
-            return str(prediction[0]), draw_points, confidence
+            # --- 🚨 NÂNG CẤP: NGƯỠNG TỰ TIN ---
+            predicted_char = str(prediction[0])
+            
+            return predicted_char, draw_points, confidence
         else:
             return "", [], 0.0
             
@@ -78,7 +78,9 @@ async def sign_to_text_from_image(base64_str: str):
 
 async def sign_to_text(landmarks: list, db: Session) -> str:
     pass 
+
 async def text_to_sign(text: str):
     return "URL_video_demo"
+
 async def text_to_speech(text: str):
     return "base64_audio_data"
