@@ -70,23 +70,27 @@ Build môi trường
 Cần cài đặt Python và kích hoạt môi trường ảo (ví dụ: .venv). Sau đó cài đặt các thư viện:
 
 Bash
+``` text
 cd backend
 pip install -r requirements.txt
+```
 Chạy với development server:
-
+```text
 Bash
 uvicorn app.main:app --reload
 (Backend khởi chạy mặc định tại cổng 8000. Tài liệu Swagger UI tại /docs)
-
+```
 # 4.2. Frontend
 Build môi trường
 Cần cài đặt Node.js. Tại thư mục gốc hoặc thư mục frontend, chạy lệnh:
-
+```text
 Bash
 npm install
 Chạy với development server:
-
+```
 Bash
+```text
 cd frontend
 npm start
 Hoặc npm run dev (tùy theo cấu hình trong package.json)
+```
