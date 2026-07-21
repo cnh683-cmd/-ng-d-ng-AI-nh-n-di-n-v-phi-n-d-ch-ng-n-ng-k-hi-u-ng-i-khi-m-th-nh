@@ -31,6 +31,7 @@ Dưới đây là cấu trúc thư mục tổng thể của toàn bộ dự án:
 ├── .gitignore                   # Cấu hình các file/thư mục không đẩy lên Git
 ├── package-lock.json            # Khóa phiên bản cụ thể của các thư viện npm
 └── package.json                 # Cấu hình dự án npm và danh sách dependencies
+```
 1.1. Frontend: React + JavaScript
 Nằm trong thư mục frontend/.
 
