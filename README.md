@@ -94,3 +94,11 @@ cd frontend
 npm start
 Hoặc npm run dev (tùy theo cấu hình trong package.json)
 ```
+# 4.3 Traning dữ liệu
+```text
+python collect_data.py
+```
+# nạp dữ liệu vào models
+```text
+python train_model.py
+```
